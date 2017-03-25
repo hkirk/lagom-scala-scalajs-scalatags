@@ -22,7 +22,8 @@ lazy val scalajsclient = (project in file("scalajs")).settings(
   unmanagedSourceDirectories in Compile := Seq((scalaSource in Compile).value),
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % "0.9.1",
-    "com.lihaoyi" %%% "scalatags" % "0.5.5"
+    "com.lihaoyi" %%% "scalatags" % "0.5.5",
+    "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
   )
 ).enablePlugins(ScalaJSPlugin, ScalaJSPlay)
 .dependsOn(sharedJs)
