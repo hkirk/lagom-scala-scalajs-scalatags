@@ -8,7 +8,8 @@ lazy val playserver = (project in file("play")).settings(
   scalaJSProjects := clients,
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "scalatags" % "0.5.5",
-    "org.webjars" % "jquery" % "3.0.0"
+    "org.webjars" % "jquery" % "3.0.0",
+    specs2 % Test
   )
 ).enablePlugins(PlayScala, LagomPlay).
   aggregate(clients.map(projectToRef): _*).
