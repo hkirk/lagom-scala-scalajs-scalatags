@@ -29,7 +29,12 @@ lazy val scalajsclient = (project in file("scalajs")).settings(
 .dependsOn(sharedJs)
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
-  settings(scalaVersion := scalaV).
+  settings(
+    scalaVersion := scalaV,
+    libraryDependencies ++= Seq(
+      "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
+    )
+  ).
   jsConfigure(_ enablePlugins ScalaJSPlay)
 
 lazy val sharedJvm = shared.jvm
