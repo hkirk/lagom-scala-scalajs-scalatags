@@ -1,7 +1,24 @@
 import sbt.Project.projectToRef
 
-lazy val clients = Seq(scalajsclient)
 lazy val scalaV = "2.11.8"
+
+val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+val macwire = "com.softwaremill.macwire" %% "macros" % "2.2.5" % "provided"
+
+lazy val scalajsclient = (project in file("scalajs")).settings(
+  scalaVersion := scalaV,
+  persistLauncher := true,
+  persistLauncher in Test := false,
+  unmanagedSourceDirectories in Compile := Seq((scalaSource in Compile).value),
+  libraryDependencies ++= Seq(
+    "org.scala-js" %%% "scalajs-dom" % "0.9.1",
+    "com.lihaoyi" %%% "scalatags" % "0.5.5",
+    scalaTest
+  )
+).enablePlugins(ScalaJSPlugin, ScalaJSPlay)
+  .dependsOn(sharedJs)
+
+lazy val clients = Seq(scalajsclient)
 
 lazy val playserver = (project in file("play")).settings(
   scalaVersion := scalaV,
@@ -15,24 +32,11 @@ lazy val playserver = (project in file("play")).settings(
   aggregate(clients.map(projectToRef): _*).
   dependsOn(sharedJvm)
 
-lazy val scalajsclient = (project in file("scalajs")).settings(
-  scalaVersion := scalaV,
-  persistLauncher := true,
-  persistLauncher in Test := false,
-  unmanagedSourceDirectories in Compile := Seq((scalaSource in Compile).value),
-  libraryDependencies ++= Seq(
-    "org.scala-js" %%% "scalajs-dom" % "0.9.1",
-    "com.lihaoyi" %%% "scalatags" % "0.5.5",
-    "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
-  )
-).enablePlugins(ScalaJSPlugin, ScalaJSPlay)
-.dependsOn(sharedJs)
-
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
   settings(
     scalaVersion := scalaV,
     libraryDependencies ++= Seq(
-      "org.scalatest" %%% "scalatest" % "3.0.1" % "test"
+      scalaTest
     )
   ).
   jsConfigure(_ enablePlugins ScalaJSPlay)
@@ -43,16 +47,18 @@ lazy val sharedJs = shared.js
 lazy val timeApi = commonSettings("time-api")
   .settings(
     scalaVersion := scalaV,
-    libraryDependencies += lagomJavadslApi
+    libraryDependencies += lagomScaladslApi
   )
 
 lazy val timeImpl = commonSettings("time-impl")
-  .enablePlugins(LagomJava)
+  .enablePlugins(LagomScala)
+  .settings(lagomForkedTestSettings: _*)
   .settings(
     scalaVersion := scalaV,
     libraryDependencies ++= Seq(
-      //lagomJavadslPersistence,
-      lagomJavadslTestKit
+      macwire,
+      lagomScaladslTestKit,
+      scalaTest
     )
   )
 .settings(lagomForkedTestSettings: _*)
@@ -61,15 +67,12 @@ lazy val timeImpl = commonSettings("time-impl")
 def commonSettings(id: String) = Project(id, base = file(id))
   .settings(eclipseSettings: _*)
   .settings(javacOptions in compile ++= Seq("-encoding", "UTF-8", "-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation"))
-  .settings(jacksonParameterNamesJavacSettings: _*) // applying it to every project even if not strictly needed.
+
+lazy val root = (project in file("."))
+  .aggregate(playserver, sharedJvm, sharedJs, scalajsclient, timeImpl)
 
 // loads the Play project at sbt startup
-onLoad in Global := (Command.process("project playserver", _: State)) compose (onLoad in Global).value
-
-//See https://github.com/FasterXML/jackson-module-parameter-names
-lazy val jacksonParameterNamesJavacSettings = Seq(
-javacOptions in compile += "-parameters"
-)
+onLoad in Global := (Command.process("project root", _: State)) compose (onLoad in Global).value
 
 //Configuration of sbteclipse
 //Needed for importing the project into Eclipse

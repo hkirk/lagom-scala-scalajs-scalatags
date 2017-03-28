@@ -6,7 +6,7 @@ import shared.SharedMessages
 import org.scalajs.dom.ext.Ajax
 import scala.concurrent.ExecutionContext
 
-object Hellp extends js.JSApp {
+object Hello extends js.JSApp {
 
   def main(): Unit = {
     if (!js.isUndefined(global.window.console)) {

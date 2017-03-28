@@ -1,26 +1,22 @@
 package time.impl
 
-import time.api.TimeService
-import com.lightbend.lagom.javadsl.api.ServiceCall
+import java.time.{LocalTime, ZoneId}
+
 import akka.NotUsed
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionStage
-import java.time.LocalTime
-import java.time.ZoneId
+import com.lightbend.lagom.scaladsl.api.{Descriptor, ServiceCall}
+import time.api.TimeService
 
-class TimeServiceImpl extends TimeService{
+import scala.concurrent.{ExecutionContext, Future}
 
-  
-  override def timeAt(tz: String): ServiceCall[NotUsed, String] = {
-    new ServiceCall[NotUsed, String] {
-      
-      override def invoke(obj: NotUsed) : CompletionStage[String] = {
-        val c = new CompletableFuture[String]
-        c.complete(LocalTime.now(ZoneId.of(tz, ZoneId.SHORT_IDS)).toString)
-        c
+class TimeServiceImpl(implicit ec: ExecutionContext) extends TimeService {
+
+  override def timeAt(tz: String): ServiceCall[NotUsed, String] = new ServiceCall[NotUsed, String] {
+      override def invoke(obj: NotUsed): Future[String] = {
+        Future {
+          LocalTime.now(ZoneId.of(tz, ZoneId.SHORT_IDS)).toString
+        }
       }
-      
     }
-  }
-  
+
+  override def descriptor: Descriptor = super.descriptor
 }
